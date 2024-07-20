@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four</title>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(7, 50px);
+            grid-template-rows: repeat(6, 50px);
+            gap: 5px;
+            margin: 20px auto;
+            border: 2px solid black;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: lightgray;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Connect Four</h1>
+    <div>
+        <label for="player1">Player 1 Name:</label>
+        <input type="text" id="player1" placeholder="Enter name">
+        <label for="player2">Player 2 Name:</label>
+        <input type="text" id="player2" placeholder="Enter name">
+        <button onclick="startGame()">Start Game</button>
+    </div>
+    <div class="board" id="board"></div>
+    <p id="message"></p>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const board = document.getElementById('board');
+            const message = document.getElementById('message');
+            let currentPlayer = 'player1';
+            let boardState = Array(6).fill(null).map(() => Array(7).fill(null));
+            let playerNames = ['', ''];
+            const playerColors = {
+                player1: 'orange',
+                player2: 'black'
+            };
+
+            function startGame() {
+                playerNames[0] = document.getElementById('player1').value || 'Player 1';
+                playerNames[1] = document.getElementById('player2').value || 'Player 2';
+                boardState = Array(6).fill(null).map(() => Array(7).fill(null));
+                currentPlayer = 'player1';
+                message.textContent = `${playerNames[0]}'s turn`;
+                createBoard();
+            }
+
+            function createBoard() {
+                board.innerHTML = '';
+                for (let row = 0; row < 6; row++) {
+                    for (let col = 0; col < 7; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        cell.addEventListener('click', handleCellClick);
+                        board.appendChild(cell);
+                    }
+                }
+            }
+
+            function handleCellClick(event) {
+                const col = event.target.dataset.col;
+                for (let row = 5; row >= 0; row--) {
+                    if (!boardState[row][col]) {
+                        boardState[row][col] = currentPlayer;
+                        event.target.parentNode.children[row * 7 + Number(col)].style.backgroundColor = playerColors[currentPlayer];
+                        if (checkWin(row, col)) {
+                            message.textContent = `${playerNames[currentPlayer === 'player1' ? 0 : 1]} wins!`;
+                            board.removeEventListener('click', handleCellClick);
+                        } else {
+                            currentPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+                            message.textContent = `${playerNames[currentPlayer === 'player1' ? 0 : 1]}'s turn`;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            function checkWin(row, col) {
+                const player = boardState[row][col];
+                return checkDirection(row, col, 1, 0, player) || // Horizontal
+                       checkDirection(row, col, 0, 1, player) || // Vertical
+                       checkDirection(row, col, 1, 1, player) || // Diagonal \
+                       checkDirection(row, col, 1, -1, player);  // Diagonal /
+            }
+
+            function checkDirection(row, col, rowInc, colInc, player) {
+                let count = 1;
+                for (let i = 1; i < 4; i++) {
+                    const r = row + rowInc * i;
+                    const c = col + colInc * i;
+                    if (r >= 0 && r < 6 && c >= 0 && c < 7 && boardState[r][c] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                for (let i = 1; i < 4; i++) {
+                    const r = row - rowInc * i;
+                    const c = col - colInc * i;
+                    if (r >= 0 && r < 6 && c >= 0 && c < 7 && boardState[r][c] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                return count >= 4;
+            }
+
+            // Initialize game on page load
+            createBoard();
+        });
+    </script>
+</body>
+</html>
